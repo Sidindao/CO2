@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException , Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from api import database
-from api import crud
-from api import schemas
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+import database
+import crud
+import schemas
 
 router = APIRouter(prefix="/co2", tags=["Emissions CO2"])
 
@@ -20,20 +22,19 @@ async def calculate_emission(
 @router.get("/compare", response_model=list[schemas.CalculEmissionOutput])
 async def compare_emissions(
     distance_km: float = Query(...),
-    db: AsyncSession = Depends(database.get_db)  
-):
+    db: AsyncSession = Depends(database.get_db)):
     transports = [
-    "Car – Electric",
-    "Car – Plug-in Hybrid",
-    "Car – Mild Hybrid",
-    "Car – High-end Mild Hybrid",
+    "Car - Electric",
+    "Car - Plug-in Hybrid",
+    "Car - Mild Hybrid",
+    "Car - High-end Mild Hybrid",
     "Bus",
     "Metro",
     "Tramway",
     "RER",
     "TER",
     "Plane"
-]
+    ]
 
     results = []
 
@@ -50,6 +51,3 @@ async def get_emission(mode_transport: str, db: AsyncSession = Depends(database.
     if not emission:
         raise HTTPException(status_code=404, detail="Mode de transport non trouvé")
     return emission
-
-
-

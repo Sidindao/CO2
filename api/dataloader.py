@@ -1,6 +1,6 @@
 import asyncio
-from api.database import get_db, init_db, close_db
-from api.models import EmissionCO2
+from database import get_db, init_db, close_db
+from models import EmissionCO2
 
 async def load_data():
     await init_db()

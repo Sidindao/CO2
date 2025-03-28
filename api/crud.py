@@ -1,6 +1,6 @@
 from sqlalchemy.future import select 
 from sqlalchemy.ext.asyncio import AsyncSession
-from api import models
+import models
 from sqlalchemy import func
 
 async def get_emission_co2(db: AsyncSession, mode_transport: str):

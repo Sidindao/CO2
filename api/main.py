@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from api import database
-from api.routes import transport
+import database
+from routes import transport
 
 
 app = FastAPI(title="API CO2 Calculator")
