@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-=======
 image: node:20
 
->>>>>>> developpement
 stages:
   - install
   - lint
@@ -15,23 +12,13 @@ cache:
     - FRONTEND/node_modules/
 
 before_script:
-<<<<<<< HEAD
-  - cd FRONTEND
-  - npm install
-=======
   - cd FRONTEND  
   - npm install  
->>>>>>> developpement
 
 install:
   stage: install
   script:
-<<<<<<< HEAD
-    - cd FRONTEND
-    - npm install
-=======
     - npm install 
->>>>>>> developpement
   only:
     - main
     - developpement
@@ -40,12 +27,7 @@ install:
 lint:
   stage: lint
   script:
-<<<<<<< HEAD
-    - cd FRONTEND
-    - npm run lint
-=======
     - npm run lint 
->>>>>>> developpement
   only:
     - main
     - developpement
@@ -54,16 +36,6 @@ lint:
 test:
   stage: test
   script:
-<<<<<<< HEAD
-    - cd FRONTEND
-    - npm run test
-  artifacts:
-    when: always
-    reports:
-      junit: junit.xml
-    paths:
-      - FRONTEND/coverage/
-=======
     - npm run test  
   artifacts:
     when: always
@@ -71,7 +43,6 @@ test:
       junit: junit.xml 
     paths:
       - FRONTEND/coverage/  
->>>>>>> developpement
   only:
     - main
     - developpement
@@ -80,18 +51,10 @@ test:
 build:
   stage: build
   script:
-<<<<<<< HEAD
-    - cd FRONTEND
-    - npm run build
-  artifacts:
-    paths:
-      - FRONTEND/dist/
-=======
     - npm run build 
   artifacts:
     paths:
       - FRONTEND/dist/  
->>>>>>> developpement
   only:
     - main
     - developpement
@@ -100,16 +63,6 @@ build:
 deploy:
   stage: deploy
   script:
-<<<<<<< HEAD
-    - mkdir -p ~/.ssh
-    - echo "$CLE_PEM" > ~/.ssh/cle.pem
-    - echo "$GITLABCI_PEM" > ~/.ssh/gitlabci.pem
-    - chmod 600 ~/.ssh/cle.pem
-    - chmod 600 ~/.ssh/gitlabci.pem
-    - ssh -i ~/.ssh/cle.pem -o StrictHostKeyChecking=no p2413812@192.168.75.41 "mkdir -p /var/www/html"
-    - scp -i ~/.ssh/gitlabci.pem -o StrictHostKeyChecking=no -r FRONTEND/dist/* p2413812@192.168.75.41:/var/www/html
-    - ssh -i ~/.ssh/cle.pem -o StrictHostKeyChecking=no p2413812@192.168.75.41 "sudo systemctl restart nginx"
-=======
     - mkdir -p ~/.ssh  
     - echo "$CLE_PEM" > ~/.ssh/cle.pem  
     - echo "$GITLABCI_PEM" > ~/.ssh/gitlabci.pem  
@@ -118,6 +71,5 @@ deploy:
     - ssh -i ~/.ssh/cle.pem -o StrictHostKeyChecking=no p2413812@192.168.75.41 "mkdir -p /var/www/html"  
     - scp -i ~/.ssh/gitlabci.pem -o StrictHostKeyChecking=no -r FRONTEND/dist/* p2413812@192.168.75.41:/var/www/html  
     - ssh -i ~/.ssh/cle.pem -o StrictHostKeyChecking=no p2413812@192.168.75.41 "sudo systemctl restart nginx"  
->>>>>>> developpement
   only:
     - main
