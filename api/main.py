@@ -1,6 +1,7 @@
 from fastapi import FastAPI
-from routes import transport
-import database
+from api import database
+from api.routes import transport
+
 
 app = FastAPI(title="API CO2 Calculator")
 
@@ -13,8 +14,10 @@ def home():
 @app.on_event("startup")
 async def startup():
     await database.init_db()
+    
 
 @app.on_event("shutdown")
 async def shutdown():
     await database.close_db()
+    
     
