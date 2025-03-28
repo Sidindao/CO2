@@ -17,7 +17,7 @@ before_script:
 install:
   stage: install
   script:
-    - cd FRONTEND
+    #- cd FRONTEND
     - npm install
   only:
     - main
@@ -27,7 +27,7 @@ install:
 lint:
   stage: lint
   script:
-    - cd FRONTEND
+    #- cd FRONTEND
     - npm run lint
   only:
     - main
@@ -37,14 +37,15 @@ lint:
 test:
   stage: test
   script:
-    - cd FRONTEND
+    #- cd FRONTEND
     - npm run test
   artifacts:
     when: always
     reports:
       junit: junit.xml
     paths:
-      - FRONTEND/coverage/
+      #- FRONTEND/coverage/
+      coverage/
   only:
     - main
     - developpement
@@ -53,11 +54,12 @@ test:
 build:
   stage: build
   script:
-    - cd FRONTEND
+    #- cd FRONTEND
     - npm run build
   artifacts:
     paths:
-      - FRONTEND/dist/
+      #- FRONTEND/dist/
+      dist/
   only:
     - main
     - developpement
