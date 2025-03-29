@@ -61,8 +61,8 @@ deploy:
   only:
     - main
   script:
-    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -r ./api"
-    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -r /usr/share/nginx/html/app/*"
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf ./api"
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf /usr/share/nginx/html/app/*"
 
     - scp -i $SSH_PRIVATE_KEY -r ./api gitlabci@192.168.75.41:/home/gitlabci/api
     - scp -i $SSH_PRIVATE_KEY -r dist/* gitlabci@192.168.75.41:/usr/share/nginx/html/ap
@@ -72,8 +72,8 @@ deploy-dev:
   only:
     - develop
   script:
-    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -r ./dev/api"
-    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -r /usr/share/nginx/html/dev/*"
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf ./dev/api"
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf /usr/share/nginx/html/dev/*"
 
     - scp -i $SSH_PRIVATE_KEY -r ./api gitlabci@192.168.75.41:/home/gitlabci/dev/api
     - scp -i $SSH_PRIVATE_KEY -r dist/* gitlabci@192.168.75.41:/usr/share/nginx/html/dev
