@@ -69,7 +69,7 @@ deploy:
     - chmod 600 ~/.ssh/cle.pem 
     - chmod 600 ~/.ssh/gitlabci.pem  
     - ssh -i ~/.ssh/cle.pem -o StrictHostKeyChecking=no p2413812@192.168.75.41 "mkdir -p /var/www/html"
-    - scp -o StrictHostKeyChecking=no -i ~/.ssh/cle.pem -r FRONTEND/dist/* gitlabci@192.168.75.41:/var/www/html
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/gitlabci.pem -r FRONTEND/dist/* gitlabci@192.168.75.41:/var/www/html
     - ssh -i ~/.ssh/cle.pem -o StrictHostKeyChecking=no p2413812@192.168.75.41 "sudo systemctl restart nginx"  
   only:
     - main
