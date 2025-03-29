@@ -21,7 +21,12 @@ before_script:
   - echo "HOST *" > ~/.ssh/config
   - echo "StrictHostKeyChecking no" >> ~/.ssh/config
 # installation des paquet requis  
-  - ls && cd FRONTEND && ls && npm install && cd ..
+  - ls
+  - cd FRONTEND 
+  - echo "MAIS"
+  - ls 
+  - npm install 
+  - cd ..
 
 test:
   stage: test
