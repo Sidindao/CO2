@@ -63,11 +63,11 @@ deploy:
   script:
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf ./api"
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf ./env"
-    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf ./web/*"
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf /usr/share/nginx/html/main/*"
     
 
     - scp -i $SSH_PRIVATE_KEY -r ./api gitlabci@192.168.75.41:/home/gitlabci/api
-    - scp -i $SSH_PRIVATE_KEY -r FRONTEND/dist/* gitlabci@192.168.75.41:/home/gitlabci/web
+    - scp -i $SSH_PRIVATE_KEY -r FRONTEND/dist/* gitlabci@192.168.75.41:/usr/share/nginx/html/main/
 
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "python3 -m venv ./env"
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "./env/bin/python -m pip install -r ./api/requirements.txt"
@@ -83,11 +83,11 @@ deploy-dev:
   script:
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf ./dev/api"
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf ./dev/env"
-    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf ./dev/web/*"
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf /usr/share/nginx/html/dev/*"
 
 
     - scp -i $SSH_PRIVATE_KEY -r ./api gitlabci@192.168.75.41:/home/gitlabci/dev/api
-    - scp -i $SSH_PRIVATE_KEY -r FRONTEND/dist/* gitlabci@192.168.75.41:/home/gitlabci/dev/web
+    - scp -i $SSH_PRIVATE_KEY -r FRONTEND/dist/* gitlabci@192.168.75.41:/usr/share/nginx/html/dev/
 
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "python3 -m venv ./dev/env"
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "./dev/env/bin/python -m pip install -r ./dev/api/requirements.txt"
