@@ -1,75 +1,76 @@
 image: node:20
 
-stages:
-  - install
-  - lint
+stages:          # List of stages for jobs, and their order of execution
   - test
   - build
   - deploy
+  - deploy-dev
 
 cache:
   paths:
     - FRONTEND/node_modules/
 
+
 before_script:
-  - cd FRONTEND  
-  - npm install  
-
-install:
-  stage: install
-  script:
-    - npm install 
-  only:
-    - main
-    - developpement
-    - test
-
-lint:
-  stage: lint
-  script:
-    - npm run lint 
-  only:
-    - main
-    - developpement
-    - test
+  - chmod 400 $SSH_PRIVATE_KEY
+  - apt update
+# Mise en place du ssh
+  - apt -y install openssh-client
+  - mkdir ~/.ssh
+  - touch ~/.ssh/config
+  - echo "HOST *" > ~/.ssh/config
+  - echo "StrictHostKeyChecking no" >> ~/.ssh/config
+# installation des paquet requis  
+  - ls && cd FRONTEND && ls && npm install && cd ..
 
 test:
   stage: test
   script:
-    - npm run test  
+    - cd FRONTEND
+    - npm run lint 
+    - npm run test
+    - cd ..
   artifacts:
     when: always
     reports:
       junit: junit.xml 
     paths:
       - FRONTEND/coverage/  
-  only:
-    - main
-    - developpement
-    - test
 
 build:
   stage: build
+  only:
+    - main
+    - develop
   script:
+    - cd FRONTEND
     - npm run build 
+    - cd ..
   artifacts:
     paths:
       - FRONTEND/dist/  
-  only:
-    - main
-    - developpement
-    - test
+  
 
 deploy:
   stage: deploy
-  script:
-    - mkdir -p ~/.ssh  
-    - echo "$CLE_PEM" > ~/.ssh/cle.pem  
-    - echo "$GITLABCI_PEM" > ~/.ssh/gitlabci.pem  
-    - chmod 600 ~/.ssh/cle.pem 
-    - chmod 600 ~/.ssh/gitlabci.pem  
-    - scp -o StrictHostKeyChecking=no -i ~/.ssh/gitlabci.pem -r dist/* gitlabci@192.168.75.41:/usr/share/nginx/html
-    - ssh -i ~/.ssh/cle.pem -o StrictHostKeyChecking=no p2413812@192.168.75.41 "sudo systemctl restart nginx"  
   only:
     - main
+  script:
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -r ./api"
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -r /usr/share/nginx/html/app/*"
+
+    - scp -i $SSH_PRIVATE_KEY -r ./api gitlabci@192.168.75.41:/home/gitlabci/api
+    - scp -i $SSH_PRIVATE_KEY -r dist/* gitlabci@192.168.75.41:/usr/share/nginx/html/ap
+
+deploy-dev:
+  stage: deploy-dev
+  only:
+    - develop
+  script:
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -r ./dev/api"
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -r /usr/share/nginx/html/dev/*"
+
+    - scp -i $SSH_PRIVATE_KEY -r ./api gitlabci@192.168.75.41:/home/gitlabci/dev/api
+    - scp -i $SSH_PRIVATE_KEY -r dist/* gitlabci@192.168.75.41:/usr/share/nginx/html/dev
+  
 
