@@ -65,7 +65,7 @@ deploy:
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf /usr/share/nginx/html/app/*"
 
     - scp -i $SSH_PRIVATE_KEY -r ./api gitlabci@192.168.75.41:/home/gitlabci/api
-    - scp -i $SSH_PRIVATE_KEY -r dist/* gitlabci@192.168.75.41:/usr/share/nginx/html/ap
+    - scp -i $SSH_PRIVATE_KEY -r FRONTEND/dist/* gitlabci@192.168.75.41:/usr/share/nginx/html/app
 
 deploy-dev:
   stage: deploy-dev
@@ -76,6 +76,6 @@ deploy-dev:
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf /usr/share/nginx/html/dev/*"
 
     - scp -i $SSH_PRIVATE_KEY -r ./api gitlabci@192.168.75.41:/home/gitlabci/dev/api
-    - scp -i $SSH_PRIVATE_KEY -r dist/* gitlabci@192.168.75.41:/usr/share/nginx/html/dev
+    - scp -i $SSH_PRIVATE_KEY -r FRONTEND/dist/* gitlabci@192.168.75.41:/usr/share/nginx/html/dev
   
 
