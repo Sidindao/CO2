@@ -73,7 +73,7 @@ deploy:
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "./env/bin/python -m pip install -r ./api/requirements.txt"
     - scp -i $SSH_PRIVATE_KEY $DB_PY_CONFIG gitlabci@192.168.75.41:/home/gitlabci/api/config.py
 
-    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "systemctl restart api_co2.service"
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "sudo systemctl restart api_co2.service"
 
 deploy-dev:
   stage: deploy-dev
@@ -92,6 +92,6 @@ deploy-dev:
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "./dev/env/bin/python -m pip install -r ./dev/api/requirements.txt"
     - scp -i $SSH_PRIVATE_KEY $DB_PY_CONFIG gitlabci@192.168.75.41:/home/gitlabci/dev/api/config.py
 
-    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "systemctl restart api_co2_dev.service"
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "sudo systemctl restart api_co2_dev.service"
   
 
