@@ -71,7 +71,7 @@ deploy:
 
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "python3 -m venv ./env"
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "./env/bin/python -m pip install -r ./api/requirements.txt"
-    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "echo $DB_PY_CONFIG > ./api/config.py"
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 `echo $DB_PY_CONFIG > ./api/config.py`
 
 deploy-dev:
   stage: deploy-dev
@@ -88,6 +88,6 @@ deploy-dev:
 
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "python3 -m venv ./dev/env"
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "./dev/env/bin/python -m pip install -r ./dev/api/requirements.txt"
-    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "echo $DB_PY_CONFIG > ./dev/api/config.py"
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 `echo $DB_PY_CONFIG > ./dev/api/config.py`
   
 
