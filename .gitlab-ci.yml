@@ -79,7 +79,7 @@ deploy-dev:
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf ./dev/env"
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf ./dev/web/*"
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "python3 -m venv ./dev/env"
-    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "./dev/env/bin/python -m pip install -r ./api/requirements.txt"
+    - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "./dev/env/bin/python -m pip install -r ./dev/api/requirements.txt"
 
     - scp -i $SSH_PRIVATE_KEY -r ./api gitlabci@192.168.75.41:/home/gitlabci/dev/api
     - scp -i $SSH_PRIVATE_KEY -r FRONTEND/dist/* gitlabci@192.168.75.41:/home/gitlabci/dev/web
