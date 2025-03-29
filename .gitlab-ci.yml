@@ -1,0 +1,75 @@
+image: node:20
+
+stages:
+  - install
+  - lint
+  - test
+  - build
+  - deploy
+
+cache:
+  paths:
+    - FRONTEND/node_modules/
+
+before_script:
+  - cd FRONTEND  
+  - npm install  
+
+install:
+  stage: install
+  script:
+    - npm install 
+  only:
+    - main
+    - developpement
+    - test
+
+lint:
+  stage: lint
+  script:
+    - npm run lint 
+  only:
+    - main
+    - developpement
+    - test
+
+test:
+  stage: test
+  script:
+    - npm run test  
+  artifacts:
+    when: always
+    reports:
+      junit: junit.xml 
+    paths:
+      - FRONTEND/coverage/  
+  only:
+    - main
+    - developpement
+    - test
+
+build:
+  stage: build
+  script:
+    - npm run build 
+  artifacts:
+    paths:
+      - FRONTEND/dist/  
+  only:
+    - main
+    - developpement
+    - test
+
+deploy:
+  stage: deploy
+  script:
+    - mkdir -p ~/.ssh  
+    - echo "$CLE_PEM" > ~/.ssh/cle.pem  
+    - echo "$GITLABCI_PEM" > ~/.ssh/gitlabci.pem  
+    - chmod 600 ~/.ssh/cle.pem 
+    - chmod 600 ~/.ssh/gitlabci.pem  
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/gitlabci.pem -r dist/* gitlabci@192.168.75.41:/usr/share/nginx/html
+    - ssh -i ~/.ssh/cle.pem -o StrictHostKeyChecking=no p2413812@192.168.75.41 "sudo systemctl restart nginx"  
+  only:
+    - main
+
