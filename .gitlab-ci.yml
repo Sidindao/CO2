@@ -61,7 +61,7 @@ build-dev:
     - develop
   script:
     - cd FRONTEND
-    - sed -i "/export default defineConfig({/a \  base: \'/dev/\'," vite.config.js
+    - mv $DEV_CONF_FILE vite.config.js
     - cd ..
   artifacts:
     paths:
