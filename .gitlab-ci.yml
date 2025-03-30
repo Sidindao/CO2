@@ -62,6 +62,7 @@ build-dev:
   script:
     - cd FRONTEND
     - mv $DEV_CONF_FILE vite.config.js
+    - npm run build 
     - cd ..
   artifacts:
     paths:
