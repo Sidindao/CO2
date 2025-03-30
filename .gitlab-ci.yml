@@ -3,6 +3,7 @@ image: node:20
 stages:          # List of stages for jobs, and their order of execution
   - test
   - build
+  - build-dev
   - deploy
   - deploy-dev
 
@@ -46,10 +47,21 @@ build:
   stage: build
   only:
     - main
-    - develop
   script:
     - cd FRONTEND
     - npm run build 
+    - cd ..
+  artifacts:
+    paths:
+      - FRONTEND/dist/  
+
+build-dev:
+  stage: build-dev
+  only:
+    - develop
+  script:
+    - cd FRONTEND
+    - sed -i "/export default defineConfig({/a \  base: '/dev/'," vite.config.js
     - cd ..
   artifacts:
     paths:
