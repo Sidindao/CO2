@@ -1,47 +1,48 @@
 image: node:20
 
-stages:          # List of stages for jobs, and their order of execution
+stages: # List of stages for jobs, and their order of execution
   - test
   - build
   - build-dev
   - deploy
   - deploy-dev
+  - sonarqube-check
+  - sonarqube-vulnerability-report
 
 cache:
   paths:
     - FRONTEND/node_modules/
 
-
 before_script:
   - chmod 400 $SSH_PRIVATE_KEY
   - apt update
-# Mise en place du ssh
+  # Mise en place du ssh
   - apt -y install openssh-client
   - mkdir ~/.ssh
   - touch ~/.ssh/config
   - echo "HOST *" > ~/.ssh/config
   - echo "StrictHostKeyChecking no" >> ~/.ssh/config
-# installation des paquet requis  
+  # installation des paquet requis
   - ls
-  - cd FRONTEND 
+  - cd FRONTEND
   - echo "MAIS"
-  - ls 
-  - npm install 
+  - ls
+  - npm install
   - cd ..
 
 test:
   stage: test
   script:
     - cd FRONTEND
-    - npm run lint 
+    - npm run lint
     - npm run test
     - cd ..
   artifacts:
     when: always
     reports:
-      junit: junit.xml 
+      junit: junit.xml
     paths:
-      - FRONTEND/coverage/  
+      - FRONTEND/coverage/
 
 build:
   stage: build
@@ -49,11 +50,11 @@ build:
     - main
   script:
     - cd FRONTEND
-    - npm run build 
+    - npm run build
     - cd ..
   artifacts:
     paths:
-      - FRONTEND/dist/  
+      - FRONTEND/dist/
 
 build-dev:
   stage: build-dev
@@ -62,12 +63,11 @@ build-dev:
   script:
     - cd FRONTEND
     - mv $DEV_CONF_FILE vite.config.js
-    - npm run build 
+    - npm run build
     - cd ..
   artifacts:
     paths:
-      - FRONTEND/dist/  
-  
+      - FRONTEND/dist/
 
 deploy:
   stage: deploy
@@ -77,7 +77,6 @@ deploy:
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf ./api"
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf ./env"
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf /usr/share/nginx/html/main/*"
-    
 
     - scp -i $SSH_PRIVATE_KEY -r ./api gitlabci@192.168.75.41:/home/gitlabci/api
     - scp -i $SSH_PRIVATE_KEY -r FRONTEND/dist/* gitlabci@192.168.75.41:/usr/share/nginx/html/main/
@@ -97,7 +96,6 @@ deploy-dev:
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf ./dev/env"
     - ssh -i $SSH_PRIVATE_KEY gitlabci@192.168.75.41 "rm -rf /usr/share/nginx/html/dev/*"
 
-
     - scp -i $SSH_PRIVATE_KEY -r ./api gitlabci@192.168.75.41:/home/gitlabci/dev/api
     - scp -i $SSH_PRIVATE_KEY -r FRONTEND/dist/* gitlabci@192.168.75.41:/usr/share/nginx/html/dev/
 
@@ -110,23 +108,19 @@ deploy-dev:
 
 #sonar cube config
 
-stages:
-    - sonarqube-check
-    - sonarqube-vulnerability-report
-
 sonarqube-check:
   stage: sonarqube-check
-  image: 
+  image:
     name: sonarsource/sonar-scanner-cli:5.0
     entrypoint: [""]
   variables:
-    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
-    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar" # Defines the location of the analysis task cache
+    GIT_DEPTH: "0" # Tells git to fetch all the branches of the project, required by the analysis task
   cache:
     key: "${CI_JOB_NAME}"
     paths:
       - .sonar/cache
-  script: 
+  script:
     - sonar-scanner
   allow_failure: true
   only:
