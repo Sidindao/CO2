@@ -29,8 +29,6 @@ lint:
   script:
     - npm run lint 
   only:
-    - main
-    - developpement
     - test
 
 test:
@@ -44,8 +42,6 @@ test:
     paths:
       - FRONTEND/coverage/  
   only:
-    - main
-    - developpement
     - test
 
 build:
@@ -57,8 +53,6 @@ build:
       - FRONTEND/dist/  
   only:
     - main
-    - developpement
-    - test
 
 deploy:
   stage: deploy
