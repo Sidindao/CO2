@@ -15,9 +15,9 @@ cache:
 
 before_script:
   - chmod 400 $SSH_PRIVATE_KEY
-  - apt update
+
   # Mise en place du ssh
-  - apt -y install openssh-client
+
   - mkdir ~/.ssh
   - touch ~/.ssh/config
   - echo "HOST *" > ~/.ssh/config
