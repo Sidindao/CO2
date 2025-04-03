@@ -1,7 +1,14 @@
-from sqlalchemy.future import select 
+from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
-import models
 from sqlalchemy import func
+import models
+import schemas
+
+async def get_list_transports(db:AsyncSession):
+    query = select(models.EmissionCO2.mode_transport)
+    result = await db.execute(query)
+    modes_transport = result.scalars().all()
+    return [schemas.ModeTransportSchema(mode_transport=mode) for mode in modes_transport]
 
 async def get_emission_co2(db: AsyncSession, mode_transport: str):
     query = select(models.EmissionCO2).where(func.lower(models.EmissionCO2.mode_transport) == mode_transport.lower())
@@ -24,4 +31,3 @@ async def calculer_emission_co2(db: AsyncSession, mode_transport: str, distance_
         "distance_km": distance_km,
         "total_emission": total_emission
     }
-
