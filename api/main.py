@@ -34,10 +34,7 @@ def home():
 @app.on_event("startup")
 async def startup():
     await database.init_db()
-    
 
 @app.on_event("shutdown")
 async def shutdown():
     await database.close_db()
-    
-    

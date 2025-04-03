@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
 import models
 import schemas
+import tools
 
 async def get_list_transports(db:AsyncSession):
     query = select(models.EmissionCO2.mode_transport)
@@ -31,3 +32,16 @@ async def calculer_emission_co2(db: AsyncSession, mode_transport: str, distance_
         "distance_km": distance_km,
         "total_emission": total_emission
     }
+
+async def calculer_emission_trajet(mode_transport: str,
+                            lat1: float, lon1: float,
+                            lat2: float, lon2: float,
+                            db: AsyncSession):
+    """ if mode_transport.split(' ')[0].lower() == "car":
+        distance_km = fetch_distance_osrm("car", lat1, lon1, lat2, lon2)["car"]
+    else: """
+    distance_km = tools.haversine(lat1, lon1, lat2, lon2)
+
+    if distance_km:
+        return await calculer_emission_co2(db, mode_transport, distance_km)
+    return None
