@@ -5,9 +5,9 @@ from routes import transport, distance, trajet
 
 
 app = FastAPI(title="API CO2 Calculator",
-              openapi_url="/api/openapi.json",
-              docs_url="/api/docs",
-              redoc_url="/api/redoc",
+              openapi_url="/openapi.json",
+              docs_url="/docs",
+              redoc_url="/redoc",
               root_path="/")
 
 origins = ['http://localhost',

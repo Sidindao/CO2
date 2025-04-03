@@ -5,7 +5,7 @@ import database
 import schemas
 import tools
 
-router = APIRouter(prefix="/distance", tags=["Emissions CO2 pour un trajet"])
+router = APIRouter(prefix="/trajet", tags=["Emissions CO2 pour un trajet"])
 
 @router.get("/calculate", response_model=schemas.CalculEmissionOutput)
 async def calculate_emission(mode_transport: str = Query(...),
