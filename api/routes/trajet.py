@@ -25,13 +25,13 @@ async def compare_emissions(adresse_depart: str = Query(...),
                             adresse_arivee: str = Query(...),
                             db: AsyncSession = Depends(database.get_db)):
 
-    transports = await crud.get_list_transports(db)
+    transports = (await crud.get_list_transports(db)).modes_transports
     lat1, lon1 = tools.get_lat_long(adresse_depart)
     lat2, lon2 = tools.get_lat_long(adresse_arivee)
     results = []
 
     for transport in transports:
-        result = await crud.calculer_emission_trajet(transport.mode_transport, lat1, lon1, lat2, lon2, db)
+        result = await crud.calculer_emission_trajet(transport, lat1, lon1, lat2, lon2, db)
         if result:
             results.append(result)
 

@@ -17,8 +17,5 @@ class CalculEmissionOutput(BaseModel):
     distance_km: float
     total_emission: float
 
-class ModeTransportSchema(BaseModel):
-    mode_transport: str
-
 class ListeModesTransport(BaseModel):
-    modes_transport: List[ModeTransportSchema]
+    modes_transports: List[str]

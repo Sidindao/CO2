@@ -22,12 +22,12 @@ async def compare_emissions(
     distance_km: float = Query(...),
     db: AsyncSession = Depends(database.get_db)):
 
-    transports = await crud.get_list_transports(db)
+    transports = (await crud.get_list_transports(db)).modes_transports
 
     results = []
 
     for mode in transports:
-        result = await crud.calculer_emission_co2(db, mode.mode_transport, distance_km)
+        result = await crud.calculer_emission_co2(db, mode, distance_km)
         if result:
             results.append(result)
 

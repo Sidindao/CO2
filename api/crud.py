@@ -9,7 +9,7 @@ async def get_list_transports(db:AsyncSession):
     query = select(models.EmissionCO2.mode_transport)
     result = await db.execute(query)
     modes_transport = result.scalars().all()
-    return [schemas.ModeTransportSchema(mode_transport=mode) for mode in modes_transport]
+    return schemas.ListeModesTransport(modes_transports=modes_transport)
 
 async def get_emission_co2(db: AsyncSession, mode_transport: str):
     query = select(models.EmissionCO2).where(func.lower(models.EmissionCO2.mode_transport) == mode_transport.lower())
