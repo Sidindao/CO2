@@ -1,43 +1,37 @@
 import React, { useState } from "react";
 import { XAxis, YAxis, Tooltip, BarChart, Bar, ResponsiveContainer } from "recharts";
-import { Link } from "react-router";
+import { Link } from "react-router"; // Correction ici
 import { renderCustomYAxisTick } from "./transportIcon";
+import { useQuery } from "@tanstack/react-query";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+const fetchComparisonData = async (distance) => {
+  const response = await fetch(`${API_BASE_URL}/compare?distance_km=${distance}`);
+  if (!response.ok) {
+    throw new Error("Erreur lors de la récupération des données");
+  }
+  return response.json();
+};
+
 const CompareEmissions = () => {
-  const [distance, setDistance] = useState(""); // Distance saisie par l'utilisateur
-  const [data, setData] = useState([]); // Données des émissions
-  const [loading, setLoading] = useState(false); // Indicateur de chargement
-  const [error, setError] = useState(null); // Gestion des erreurs
+  const [distance, setDistance] = useState("");
 
-  // Fonction pour récupérer les données de comparaison
-  const fetchComparisonData = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/compare?distance_km=${distance}`);
-      if (!response.ok) {
-        throw new Error("Erreur lors de la récupération des données");
-      }
-      const result = await response.json();
-      setData(result); // Met à jour les données avec les résultats de l'API
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Utilisation de React Query
+  const { data, error, isLoading, refetch } = useQuery({
+    queryKey: ["compareEmissions", distance], 
+    queryFn: () => fetchComparisonData(distance),
+    enabled: false, // Désactivé par défaut, on déclenchera `refetch` manuellement
+  });
 
   // Gestion de la soumission du formulaire
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!distance || isNaN(distance) || distance <= 0) {
-      setError("Veuillez entrer une distance valide.");
+      alert("Veuillez entrer une distance valide.");
       return;
     }
-    fetchComparisonData();
+    refetch(); // Déclenche la requête manuellement
   };
 
   return (
@@ -79,20 +73,20 @@ const CompareEmissions = () => {
         <button
           type="submit"
           className="mt-4 w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition-all"
-          disabled={loading}
+          disabled={isLoading}
         >
-          {loading ? "Chargement..." : "Comparer les émissions de CO₂"}
+          {isLoading ? "Chargement..." : "Comparer les émissions de CO₂"}
         </button>
       </form>
 
       {/* Affichage des résultats */}
       {error && (
         <div className="mt-4 bg-red-100 text-red-700 p-4 rounded-lg">
-          {error}
+          {error.message}
         </div>
       )}
 
-      {data.length > 0 && (
+      {data && data.length > 0 && (
         <div className="mt-4">
           <h2 className="text-center font-semibold text-gray-700">
             Comparaison des émissions de CO₂
