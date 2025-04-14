@@ -72,3 +72,12 @@ def get_all_distances(lat1, long1, lat2, long2):
     distances = osrm(lat1, long1, lat2, long2)
     distances.update({'plane':haversine(lat1, long1, lat2, long2)})
     return distances
+
+def co2_to_trees(co2_kg: float) -> int:
+    """
+    Convertit des kg de CO₂ en arbres équivalents (int).
+    Hypothèse : 1 arbre = 10 kg de CO₂
+    """
+    return math.ceil(co2_kg / 10)
+
+

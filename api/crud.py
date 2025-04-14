@@ -3,7 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
 import models
 import schemas
+from tools import co2_to_trees
 import tools
+
 
 async def get_list_transports(db:AsyncSession):
     query = select(models.EmissionCO2.mode_transport)
@@ -27,10 +29,13 @@ async def calculer_emission_co2(db: AsyncSession, mode_transport: str, distance_
         return None
 
     total_emission = emission.emission_par_km * distance_km
+    equivalent_en_arbre = int(co2_to_trees(total_emission))
     return {
         "mode_transport": emission.mode_transport,  # on renvoie le vrai nom
         "distance_km": distance_km,
-        "total_emission": total_emission
+        "total_emission": total_emission,
+        "equivalent_en_arbre": equivalent_en_arbre
+
     }
 
 async def calculer_emission_trajet(mode_transport: str,

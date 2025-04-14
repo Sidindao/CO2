@@ -16,6 +16,8 @@ class CalculEmissionOutput(BaseModel):
     mode_transport: str
     distance_km: float
     total_emission: float
+    equivalent_en_arbre: int
+    
 
 class ListeModesTransport(BaseModel):
     modes_transports: List[str]
