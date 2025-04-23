@@ -18,7 +18,7 @@ async def calculate_emission(mode_transport: str = Query(...),
     lat1, lon1 = tools.get_lat_long(adresse_depart)
     lat2, lon2 = tools.get_lat_long(adresse_arivee)
 
-    return crud.calculer_emission_trajet(mode_transport, lat1, lon1, lat2, lon2, db)
+    return await crud.calculer_emission_trajet(mode_transport, lat1, lon1, lat2, lon2, db)
 
 @router.get("/compare", response_model=list[schemas.CalculEmissionOutput])
 async def compare_emissions(adresse_depart: str = Query(...),
