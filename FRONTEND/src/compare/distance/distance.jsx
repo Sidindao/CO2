@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { XAxis, YAxis, Tooltip, BarChart, Bar, ResponsiveContainer } from "recharts";
-import { Link } from "react-router"; // Correction ici
-import { renderCustomYAxisTick } from "./transportIcon";
+import { renderCustomYAxisTick } from "../transportIcon";
 import { useQuery } from "@tanstack/react-query";
+import NavigationMenu from "../../NavigationMenu";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const fetchComparisonData = async (distance) => {
-  const response = await fetch(`${API_BASE_URL}/compare?distance_km=${distance}`);
+  const response = await fetch(`${API_BASE_URL}/distance/compare?distance_km=${distance}`);
   if (!response.ok) {
     throw new Error("Erreur lors de la récupération des données");
   }
@@ -37,20 +37,7 @@ const CompareEmissions = () => {
   return (
     <section className="bg-white p-6 shadow-lg rounded-lg max-w-3xl mx-auto border mt-6 mb-6">
       {/* Onglets de navigation */}
-      <div className="flex">
-        <Link
-          to="/"
-          className="flex-1 py-2 text-center text-gray-500 bg-green-200 font-medium transition-all"
-        >
-          Itinéraire
-        </Link>
-        <Link
-          to="/distance"
-          className="flex-1 py-2 text-center text-gray-500 bg-white font-medium transition-all"
-        >
-          Distance
-        </Link>
-      </div>
+      <NavigationMenu />
 
       {/* Formulaire de saisie */}
       <form onSubmit={handleSubmit} className="mt-4">
@@ -107,11 +94,12 @@ const CompareEmissions = () => {
                 <YAxis
                   dataKey="mode_transport"
                   type="category"
-                  width={120}
+                  interval={0}
                   tick={renderCustomYAxisTick}
                 />
                 <Tooltip />
-                <Bar dataKey="total_emission" fill="#4CAF50" barSize={30} />
+                <Bar dataKey="total_emission" fill="#4CAF50"  />
+                <Bar dataKey="equivalent_en_arbre" fill="#82ca9d" />
               </BarChart>
             </ResponsiveContainer>
           </div>
