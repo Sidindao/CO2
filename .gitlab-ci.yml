@@ -22,11 +22,8 @@ before_script:
   - touch ~/.ssh/config
   - echo "HOST *" > ~/.ssh/config
   - echo "StrictHostKeyChecking no" >> ~/.ssh/config
-  # installation des paquet requis
-  - ls
+  # installation des paquet requi
   - cd FRONTEND
-  - echo "MAIS"
-  - ls
   - npm install
   - cd ..
 
@@ -36,13 +33,17 @@ test:
     - cd FRONTEND
     - npm run lint
     - npm run test
+    - npm run coverage
+    - ls
+    - ls ..
     - cd ..
   artifacts:
     when: always
     reports:
-      junit: junit.xml
+      junit: FRONTEND/test-report/junit.xml
     paths:
       - FRONTEND/coverage/
+      - FRONTEND/test-report/junit.xml
 
 build:
   stage: build
