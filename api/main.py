@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import database
+import os
 from routes import transport, distance, trajet
 
 
@@ -33,7 +34,8 @@ def home():
 
 @app.on_event("startup")
 async def startup():
-    await database.init_db()
+    if os.getenv("TESTING") != "1":
+        await database.init_db()
 
 @app.on_event("shutdown")
 async def shutdown():

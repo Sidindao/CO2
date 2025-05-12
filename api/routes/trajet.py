@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from routes import distance
 import database
@@ -18,7 +18,11 @@ async def calculate_emission(mode_transport: str = Query(...),
     lat1, lon1 = tools.get_lat_long(adresse_depart)
     lat2, lon2 = tools.get_lat_long(adresse_arivee)
 
-    return await crud.calculer_emission_trajet(mode_transport, lat1, lon1, lat2, lon2, db)
+    result = await crud.calculer_emission_trajet(mode_transport, lat1, lon1, lat2, lon2, db)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Mode de transport non trouvé")
+
+    return result
 
 @router.get("/compare", response_model=list[schemas.CalculEmissionOutput])
 async def compare_emissions(adresse_depart: str = Query(...),

@@ -1,12 +1,14 @@
 from pydantic import BaseModel
 from typing import List
+from pydantic.config import ConfigDict
+
 
 class EmissionCO2Schema(BaseModel):
     mode_transport: str
     emission_par_km: float
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 class CalculEmissionInput(BaseModel):
     mode_transport: str
