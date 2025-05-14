@@ -9,7 +9,8 @@ def clear_env(monkeypatch):
     monkeypatch.delenv("TESTING", raising=False)
     yield
 
-def test_home():
+def test_home(monkeypatch):
+    monkeypatch.setenv("TESTING", "1")
     with TestClient(app) as client:
         response = client.get("/")
     assert response.status_code == 200
