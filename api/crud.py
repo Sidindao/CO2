@@ -49,4 +49,5 @@ async def calculer_emission_trajet(mode_transport: str,
 
     if distance_km:
         return await calculer_emission_co2(db, mode_transport, distance_km)
-    return None
+    else: # pragma: no cover
+        return None # is never when osrm not used

@@ -54,6 +54,11 @@ async def test_calculer_emission_co2(test_db):
     assert result["equivalent_en_arbre"] == 2  # 20 / 10
 
 @pytest.mark.asyncio
+async def test_calculer_emission_co2_is_none(test_db):
+    res = await calculer_emission_co2(test_db, "Non present", 100)
+    assert res is None
+
+@pytest.mark.asyncio
 async def test_calculer_emission_trajet(test_db):
     # Coordonnées approximatives Lyon -> Madrid
     result = await calculer_emission_trajet("Plane", 45.75, 4.85, 40.41, -3.70, test_db)
@@ -61,3 +66,9 @@ async def test_calculer_emission_trajet(test_db):
     assert result["mode_transport"] == "Plane"
     assert result["total_emission"] > 0
     assert "equivalent_en_arbre" in result
+
+# no need to test this if not using osrm
+""" @pytest.mark.asyncio
+async def test_calculer_emission_trajet_is_none(test_db):
+    result = await calculer_emission_trajet("Car", 0.00, 0.00, 40.41, -3.70, test_db)
+    assert result is None """

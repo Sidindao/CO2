@@ -1,148 +1,238 @@
-import sys
+"""tests/test_trajet_api.py"""
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
-os.environ["TESTING"] = "1"
-
-sys.path.append("api")
-import crud
-import models
-from main import app
-from database import get_db
-import schemas
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from unittest.mock import AsyncMock
+
+from main import app
 from models import Base, EmissionCO2
-from types import SimpleNamespace
-from unittest.mock import patch
-import tools
-
-
 import database
+import crud
+import schemas
+from routes.trajet import calculate_emission, compare_emissions
+from fastapi import HTTPException
 
+os.environ["TESTING"] = "1"
 DATABASE_URL = "sqlite+aiosqlite:///:memory:"
-engine_test = create_async_engine(DATABASE_URL, echo=False)
-TestingSessionLocal = sessionmaker(bind=engine_test, class_=AsyncSession, expire_on_commit=False)
+
+_engine = create_async_engine(DATABASE_URL, echo=False)
+_TestSessionLocal = sessionmaker(bind=_engine, class_=AsyncSession, expire_on_commit=False)
 
 @pytest_asyncio.fixture(scope="module", autouse=True)
 async def setup_database():
-    async with engine_test.begin() as conn:
+    async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        await conn.execute(EmissionCO2.__table__.insert(), [
-            {"mode_transport": "Bus", "emission_par_km": 0.2},
-            {"mode_transport": "Car", "emission_par_km": 0.15}
-        ])
+        await conn.execute(
+            EmissionCO2.__table__.insert(),
+            [
+                {"mode_transport": "Bus", "emission_par_km": 0.2},
+                {"mode_transport": "Car", "emission_par_km": 0.15},
+            ]
+        )
 
-    async def override_get_db():
-        async with TestingSessionLocal() as session:
+    async def _override_get_db():
+        async with _TestSessionLocal() as session:
             yield session
 
-    app.dependency_overrides[database.get_db] = override_get_db
+    app.dependency_overrides[database.get_db] = _override_get_db
+    yield
+    app.dependency_overrides.clear()
 
 @pytest.fixture(scope="module")
 def client():
     with TestClient(app) as c:
         yield c
 
-def test_calculate_trajet_not_found(monkeypatch, client):
-    monkeypatch.setattr(crud, "calculer_emission_trajet", AsyncMock(return_value=None))
-    response = client.get("/trajet/calculate", params={
-        "mode_transport": "Inconnu",
-        "adresse_depart": "Lyon",
-        "adresse_arivee": "Paris"
-    })
-    assert response.status_code == 404
 
-def test_calculate_trajet(client):
-    with patch("tools.get_lat_long", side_effect=[("45.75", "4.85"), ("48.85", "2.35")]):
-        response = client.get("/trajet/calculate", params={
+# --- Tests HTTP blackbox ---
+
+def test_calculate_trajet_success(monkeypatch, client):
+    fake = schemas.CalculEmissionOutput(
+        mode_transport="Bus",
+        distance_km=50.0,
+        total_emission=10.0,
+        equivalent_en_arbre=1.0
+    )
+    monkeypatch.setattr(
+        crud,
+        "calculer_emission_trajet",
+        AsyncMock(return_value=fake)
+    )
+
+    r = client.get(
+        "/trajet/calculate",
+        params={
             "mode_transport": "Bus",
             "adresse_depart": "Lyon",
             "adresse_arivee": "Paris"
-        })
-        assert response.status_code == 200
-        data = response.json()
-        assert data["mode_transport"] == "Bus"
-        assert data["total_emission"] > 0
+        }
+    )
+    assert r.status_code == 200
+    assert r.json() == fake.dict()
 
-def test_calculate_trajet_invalid_mode(client):
-    response = client.get("/trajet/calculate", params={
-        "mode_transport": "AvionFictif",
-        "adresse_depart": "Lyon",
-        "adresse_arivee": "Paris"
-    })
-    # Le calcul va renvoyer None → FastAPI répond avec 422 ou 500 selon ton implémentation
-    assert response.status_code in [404, 422, 500]
 
-def test_compare_trajet_empty(monkeypatch, client):
-    # Simuler un retour avec un attribut 'modes_transports' vide
-    fake_result = SimpleNamespace(modes_transports=[])
-    monkeypatch.setattr(crud, "get_list_transports", AsyncMock(return_value=fake_result))
+def test_calculate_trajet_invalid_mode(monkeypatch, client):
+    monkeypatch.setattr(
+        crud,
+        "calculer_emission_trajet",
+        AsyncMock(return_value=None)
+    )
+    r = client.get(
+        "/trajet/calculate",
+        params={
+            "mode_transport": "Inconnu",
+            "adresse_depart": "Lyon",
+            "adresse_arivee": "Paris"
+        }
+    )
+    assert r.status_code == 404
+    assert r.json() == {"detail": "Mode de transport non trouvé"}
 
-    response = client.get("/trajet/compare", params={
-        "adresse_depart": "Lyon",
-        "adresse_arivee": "Paris"
-    })
 
-    assert response.status_code == 200
-    assert response.json() == []
-def test_compare_trajet(client):
-    response = client.get("/trajet/compare", params={
-        "adresse_depart": "Lyon",
-        "adresse_arivee": "Paris"
-    })
-    assert response.status_code == 200
-    data = response.json()
+def test_calculate_trajet_missing_params(client):
+    r = client.get("/trajet/calculate")
+    assert r.status_code == 422
+
+
+def test_compare_trajet_success(monkeypatch, client):
+    fake1 = schemas.CalculEmissionOutput(
+        mode_transport="Bus",
+        distance_km=100.0,
+        total_emission=20.0,
+        equivalent_en_arbre=2.0
+    )
+    fake2 = schemas.CalculEmissionOutput(
+        mode_transport="Car",
+        distance_km=100.0,
+        total_emission=15.0,
+        equivalent_en_arbre=int(1.5)
+    )
+    monkeypatch.setattr(
+        crud,
+        "get_list_transports",
+        AsyncMock(return_value=schemas.ListeModesTransport(modes_transports=["Bus","Car"]))
+    )
+    monkeypatch.setattr(
+        crud,
+        "calculer_emission_trajet",
+        AsyncMock(side_effect=[fake1, fake2])
+    )
+
+    r = client.get(
+        "/trajet/compare",
+        params={"adresse_depart": "Lyon", "adresse_arivee": "Paris"}
+    )
+    assert r.status_code == 200
+    data = r.json()
     assert isinstance(data, list)
-    assert any(res["mode_transport"] == "Bus" for res in data)
+    assert data == [fake1.dict(), fake2.dict()]
 
-def test_calculate_trajet_invalid_mode(client, monkeypatch):
-    async def mock_calc(*args, **kwargs):
-        return None
-    monkeypatch.setattr(crud, "calculer_emission_trajet", mock_calc)
 
-    response = client.get("/trajet/calculate", params={
-        "mode_transport": "Inexistant",
-        "adresse_depart": "Lyon",
-        "adresse_arivee": "Paris"
-    })
-    assert response.status_code == 404
+def test_compare_trajet_missing_params(client):
+    r = client.get("/trajet/compare")
+    assert r.status_code == 422
 
-def test_compare_trajet_empty_list(monkeypatch, client):
-    monkeypatch.setattr(crud, "get_list_transports", AsyncMock(return_value=schemas.ListeModesTransport(modes_transports=[])))
-    response = client.get("/trajet/compare", params={
-        "adresse_depart": "Lyon",
-        "adresse_arivee": "Paris"
-    })
-    assert response.status_code == 200
-    assert response.json() == []
-from unittest.mock import AsyncMock
 
-def test_trajet_calculate_transport_not_found(monkeypatch, client):
-    monkeypatch.setattr(tools, "get_lat_long", lambda addr: ("45.75", "4.85"))
-    monkeypatch.setattr(crud, "calculer_emission_trajet", AsyncMock(return_value=None))
+def test_compare_trajet_empty_db(monkeypatch, client):
+    monkeypatch.setattr(
+        crud,
+        "get_list_transports",
+        AsyncMock(return_value=schemas.ListeModesTransport(modes_transports=[]))
+    )
+    r = client.get(
+        "/trajet/compare",
+        params={"adresse_depart": "Lyon", "adresse_arivee": "Paris"}
+    )
+    assert r.status_code == 200
+    assert r.json() == []
 
-    response = client.get("/trajet/calculate", params={
-        "mode_transport": "Bus",
-        "adresse_depart": "Lyon",
-        "adresse_arivee": "Paris"
-    })
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Mode de transport non trouvé"}
 
-def test_trajet_compare_empty_transports(monkeypatch, client):
-    monkeypatch.setattr(crud, "get_list_transports", AsyncMock(
-        return_value=schemas.ListeModesTransport(modes_transports=[])
-    ))
-    monkeypatch.setattr(tools, "get_lat_long", lambda addr: ("45.75", "4.85"))
+def test_compare_trajet_all_none(monkeypatch, client):
+    monkeypatch.setattr(
+        crud,
+        "get_list_transports",
+        AsyncMock(return_value=schemas.ListeModesTransport(modes_transports=["Bus","Car"]))
+    )
+    monkeypatch.setattr(
+        crud,
+        "calculer_emission_trajet",
+        AsyncMock(return_value=None)
+    )
+    r = client.get(
+        "/trajet/compare",
+        params={"adresse_depart": "Lyon", "adresse_arivee": "Paris"}
+    )
+    assert r.status_code == 200
+    assert r.json() == []
 
-    response = client.get("/trajet/compare", params={
-        "adresse_depart": "Lyon",
-        "adresse_arivee": "Paris"
-    })
-    assert response.status_code == 200
-    assert response.json() == []
+
+# --- Tests unitaires directs ---
+
+@pytest.mark.asyncio
+async def test_direct_calculate_emission_success(monkeypatch):
+    fake = schemas.CalculEmissionOutput(
+        mode_transport="Train",
+        distance_km=30.0,
+        total_emission=6.0,
+        equivalent_en_arbre=int(0.6)
+    )
+    monkeypatch.setattr(
+        crud,
+        "calculer_emission_trajet",
+        AsyncMock(return_value=fake)
+    )
+    out = await calculate_emission(
+        mode_transport="Train",
+        adresse_depart="A",
+        adresse_arivee="B",
+        db=AsyncMock(spec=AsyncSession)
+    )
+    assert out == fake
+
+
+@pytest.mark.asyncio
+async def test_direct_calculate_emission_not_found(monkeypatch):
+    monkeypatch.setattr(
+        crud,
+        "calculer_emission_trajet",
+        AsyncMock(return_value=None)
+    )
+    with pytest.raises(HTTPException) as exc:
+        await calculate_emission(
+            mode_transport="Unknown",
+            adresse_depart="A",
+            adresse_arivee="B",
+            db=AsyncMock(spec=AsyncSession)
+        )
+    assert exc.value.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_direct_compare_emissions(monkeypatch):
+    modes = ["Bus", "Car"]
+    fake_bus = schemas.CalculEmissionOutput(
+        mode_transport="Bus",
+        distance_km=50.0,
+        total_emission=10.0,
+        equivalent_en_arbre=1.0
+    )
+    monkeypatch.setattr(
+        crud,
+        "get_list_transports",
+        AsyncMock(return_value=schemas.ListeModesTransport(modes_transports=modes))
+    )
+    monkeypatch.setattr(
+        crud,
+        "calculer_emission_trajet",
+        AsyncMock(side_effect=[fake_bus, None])
+    )
+
+    out = await compare_emissions(
+        adresse_depart="A",
+        adresse_arivee="B",
+        db=AsyncMock(spec=AsyncSession)
+    )
+    assert out == [fake_bus]

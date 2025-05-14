@@ -10,7 +10,10 @@ SessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=F
 
 async def init_db():
     async with engine.begin() as conn:
-        await conn.run_sync(models.Base.metadata.create_all)
+        try:
+            await conn.run_sync(models.Base.metadata.create_all)
+        except Exception:
+            pass
 
 async def close_db():
     await engine.dispose()

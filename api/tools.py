@@ -25,13 +25,16 @@ def fetch_distance_osrm(transport, lat1, lon1, lat2, lon2):
     url = f"https://router.project-osrm.org/route/v1/{transport}/"\
         f"{lat1},{lon1};{lat2},{lon2}?overview=false"
     response = requests.get(url)
+
+    data = response.json()
+
     if response.status_code == 200:
-        data = response.json()
         if "routes" in data and len(data["routes"]) > 0:
             return {transport: (data["routes"][0]["distance"]/1000)}
         print(f"Aucune route trouvée pour {transport}.")
         return None
-    print(f"Erreur lors de la requête pour {transport}: {response.status_code}")
+
+    print(f"Erreur lors de la requête pour {transport}: {response.status_code} — réponse JSON : {data}")
     return None
 
 def osrm(lat1, lon1, lat2, lon2):
