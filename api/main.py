@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import database
 import os
 from routes import transport, distance, trajet
+from routes import emissions
 
 
 app = FastAPI(title="API CO2 Calculator",
@@ -27,7 +28,7 @@ app.add_middleware(
 app.include_router(transport.router)
 app.include_router(distance.router)
 app.include_router(trajet.router)
-
+app.include_router(emissions.router)
 @app.get("/")
 def home():
     return {"message": "Bienvenue sur l'API CO2"}
