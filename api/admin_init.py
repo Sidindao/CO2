@@ -10,7 +10,7 @@ async def create_admin():
             AdminUser.__table__.select().where(AdminUser.username == "admin")
         )
         if existing_admin.scalar():
-            print("👤 Admin déjà existant")
+            print(" Admin déjà existant")
         else:
             admin = AdminUser(
                 username="admin",
@@ -18,8 +18,8 @@ async def create_admin():
             )
             db.add(admin)
             await db.commit()
-            print("✅ Admin créé avec succès : admin / admin123")
+            print(" Admin créé avec succès : admin / admin123")
     await close_db()
 
-if __name__ == "__main__":
-    asyncio.run(create_admin())
+if __name__ == "__main__": # pragma: no cover
+    asyncio.run(create_admin()) # pragma: no cover
