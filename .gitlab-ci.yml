@@ -50,7 +50,7 @@ test:
     paths:
       - FRONTEND/coverage/
       - FRONTEND/test-report/junit.xml
-      - api/coverage/lcov.info
+      - api/coverage/cov.xml
 
 build:
   stage: build
@@ -133,7 +133,8 @@ sonarqube-check:
     - unzip sonar-scanner.zip
     - export PATH="$PWD/sonar-scanner-7.1.0.4889-linux-x64/bin:$PATH"
   script:
-    - ls FRONTEND/coverage/
+    - ls api/coverage
+    - ls api
     - sonar-scanner
   allow_failure: true
   only:
