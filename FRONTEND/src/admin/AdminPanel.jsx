@@ -1,236 +1,208 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Modal, Form, Input, message } from 'antd';
 
-// Composant principal de l'admin
-export default function AdminPanel() {
-  const [activeTab, setActiveTab] = useState('vehicule');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
 
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Operations Admin</h1>
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const EmissionsAdmin = () => {
+  const [emissions, setEmissions] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [currentEmission, setCurrentEmission] = useState(null);
+  const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
+
+  useEffect(() => {
+    fetchEmissions();
+  }, []);
+
+  const fetchEmissions = async () => {
+    try {
+      console.log('Fetching emissions...');
+      const response = await fetch(`${API_BASE_URL}/distance/compare?distance_km=1`);
+      if (!response.ok) throw new Error('Erreur lors de la récupération des données');
+      const data = await response.json();
+      console.log('Fetched emissions:');
+      console.log(data);
+      setEmissions(data);
+
       
-      {/* Navigation par onglets */}
-      <div className="flex border-b mb-6">
-        <button
-          className={`px-4 py-2 font-medium ${activeTab === 'vehicule' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-          onClick={() => {
-            setActiveTab('vehicule');
-            setCurrentPage(1);
-          }}
-        >
-          Véhicule
-        </button>
-        <button
-          className={`px-4 py-2 font-medium ${activeTab === 'ville' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-          onClick={() => {
-            setActiveTab('ville');
-            setCurrentPage(1);
-          }}
-        >
-          Ville
-        </button>
-        <button
-          className={`px-4 py-2 font-medium ${activeTab === 'autre' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-          onClick={() => {
-            setActiveTab('autre');
-            setCurrentPage(1);
-          }}
-        >
-          Autre
-        </button>
-      </div>
-
-      {/* Contenu dynamique */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        {activeTab === 'vehicule' && (
-          <EntityList 
-            entityType="vehicule" 
-            currentPage={currentPage} 
-            setCurrentPage={setCurrentPage} 
-            itemsPerPage={itemsPerPage} 
-          />
-        )}
-        {activeTab === 'ville' && (
-          <EntityList 
-            entityType="ville" 
-            currentPage={currentPage} 
-            setCurrentPage={setCurrentPage} 
-            itemsPerPage={itemsPerPage} 
-          />
-        )}
-        {activeTab === 'autre' && (
-          <EntityList 
-            entityType="autre" 
-            currentPage={currentPage} 
-            setCurrentPage={setCurrentPage} 
-            itemsPerPage={itemsPerPage} 
-          />
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Composant pour afficher la liste des entités
-function EntityList({ entityType, currentPage, setCurrentPage, itemsPerPage }) {
-  const queryClient = useQueryClient();
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({});
-  
-  // Fetch data avec React Query
-  const { data, isLoading, isError } = useQuery({
-    queryKey: [entityType, currentPage],
-    queryFn: async () => {
-      // Remplacez ceci par votre appel API réel
-      const response = await fetch(`/api/${entityType}?page=${currentPage}&limit=${itemsPerPage}`);
-      if (!response.ok) throw new Error('Network response was not ok');
-      return response.json();
-    },
-    keepPreviousData: true,
-  });
-
-  // Mutation pour supprimer un élément
-  const deleteMutation = useMutation({
-    mutationFn: (id) => fetch(`/api/${entityType}/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries([entityType]);
-    },
-  });
-
-  // Mutation pour mettre à jour un élément
-  const updateMutation = useMutation({
-    mutationFn: (updatedItem) => 
-      fetch(`/api/${entityType}/${updatedItem.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedItem),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries([entityType]);
-      setEditingId(null);
-    },
-  });
-
-  // Gérer le changement de formulaire
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Gérer la soumission du formulaire
-  const handleEditSubmit = (e) => {
-    e.preventDefault();
-    updateMutation.mutate(editForm);
-  };
-
-  // Déterminer les colonnes à afficher selon le type d'entité
-  const getColumns = () => {
-    switch (entityType) {
-      case 'vehicule':
-        return ['id', 'nom', 'conso', 'autre'];
-      case 'ville':
-        return ['id', 'nom', 'description'];
-      default:
-        return ['id', 'nom', 'info'];
+    } catch (error) {
+      message.error(error.message);
     }
   };
 
-  const columns = getColumns();
+  const handleAdd = () => {
+    form.resetFields();
+    setIsModalVisible(true);
+  };
 
-  if (isLoading) return <div className="p-4">Chargement...</div>;
-  if (isError) return <div className="p-4 text-red-500">Erreur lors du chargement des données</div>;
+  const handleEdit = (record) => {
+    setCurrentEmission(record);
+    editForm.setFieldsValue({
+      mode_transport: record.mode_transport,
+      emission_par_km: record.emission_par_km
+    });
+    setIsEditModalVisible(true);
+  };
+
+  const handleDelete = async (mode_transport) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/emissions/${mode_transport}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Erreur lors de la suppression');
+      
+      message.success('Mode de transport supprimé avec succès');
+      fetchEmissions();
+    } catch (error) {
+      message.error(error.message);
+    }
+  };
+
+  const handleAddSubmit = async (values) => {
+    try {
+      console.log(values.mode_transport);
+      const response = await fetch(`${API_BASE_URL}/admin/emissions?mode_transport=${values.mode_transport}&emission_par_km=${values.emission_par_km}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+
+      });
+      
+      if (!response.ok) throw new Error('Erreur lors de l\'ajout');
+      
+      message.success('Mode de transport ajouté avec succès');
+      setIsModalVisible(false);
+      fetchEmissions();
+    } catch (error) {
+      message.error(error.message);
+    }
+  };
+
+  const handleEditSubmit = async (values) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/emissions/${currentEmission.mode_transport}?new_value=${values.emission_par_km}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ new_value: values.emission_par_km })
+      });
+      
+      if (!response.ok) throw new Error('Erreur lors de la modification');
+      
+      message.success('Mode de transport modifié avec succès');
+      setIsEditModalVisible(false);
+      fetchEmissions();
+    } catch (error) {
+      message.error(error.message);
+    }
+  };
+
+  const columns = [
+    {
+      title: 'Mode de transport',
+      dataIndex: 'mode_transport',
+      key: 'mode_transport',
+    },
+    {
+      title: 'Émission CO2 (kg/km)',
+      dataIndex: 'total_emission',
+      key: 'total_emission',
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, record) => (
+        <>
+          <Button type="link" onClick={() => handleEdit(record)}>
+            Modifier
+          </Button>
+          <Button type="link" danger onClick={() => handleDelete(record.mode_transport)}>
+            Supprimer
+          </Button>
+        </>
+      ),
+    },
+  ];
 
   return (
     <div>
-      {/* En-tête du tableau */}
-      <div className="grid grid-cols-12 bg-gray-100 p-3 font-medium">
-        {columns.map(col => (
-          <div key={col} className="col-span-2 capitalize">{col}</div>
-        ))}
-        <div className="col-span-2">Actions</div>
-      </div>
-
-      {/* Corps du tableau */}
-      {data.items.map(item => (
-        <div key={item.id} className="grid grid-cols-12 border-b p-3 items-center">
-          {columns.map(col => (
-            <div key={`${item.id}-${col}`} className="col-span-2">
-              {editingId === item.id ? (
-                <input
-                  type="text"
-                  name={col}
-                  value={editForm[col] || ''}
-                  onChange={handleEditChange}
-                  className="w-full p-1 border rounded"
-                />
-              ) : (
-                item[col]
-              )}
-            </div>
-          ))}
-          
-          <div className="col-span-2 flex space-x-2">
-            {editingId === item.id ? (
-              <>
-                <button 
-                  onClick={handleEditSubmit}
-                  className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 flex items-center gap-1"
-                >
-                  <FaSave /> Sauvegarder
-                </button>
-                <button 
-                  onClick={() => setEditingId(null)}
-                  className="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 flex items-center gap-1"
-                >
-                  <FaTimes /> Annuler
-                </button>
-              </>
-            ) : (
-              <>
-                <button 
-                  onClick={() => {
-                    setEditingId(item.id);
-                    setEditForm({ ...item });
-                  }}
-                  className="p-1 text-blue-500 hover:text-blue-700"
-                  title="Modifier"
-                >
-                  <FaEdit className="text-lg" />
-                </button>
-                <button 
-                  onClick={() => deleteMutation.mutate(item.id)}
-                  className="p-1 text-red-500 hover:text-red-700"
-                  title="Supprimer"
-                >
-                  <FaTrash className="text-lg" />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      ))}
-
-      {/* Pagination */}
-      <div className="flex justify-between items-center p-3 bg-gray-50">
-        <button
-          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className={`px-4 py-2 rounded ${currentPage === 1 ? 'bg-gray-200 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
-        >
-          Précédent
-        </button>
-        <span>Page {currentPage} sur {Math.ceil(data.totalCount / itemsPerPage)}</span>
-        <button
-          onClick={() => setCurrentPage(prev => prev + 1)}
-          disabled={currentPage >= Math.ceil(data.totalCount / itemsPerPage)}
-          className={`px-4 py-2 rounded ${currentPage >= Math.ceil(data.totalCount / itemsPerPage) ? 'bg-gray-200 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
-        >
-          Suivant
-        </button>
-      </div>
+      <Button type="primary" onClick={handleAdd} style={{ marginBottom: 16 }}>
+        Ajouter un mode de transport
+      </Button>
+      
+      <Table 
+        columns={columns} 
+        dataSource={emissions} 
+        rowKey="mode_transport" 
+      />
+      
+      {/* Modal pour ajouter */}
+      <Modal
+        title="Ajouter un mode de transport"
+        open={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        onOk={() => form.submit()}
+        
+      >
+        <Form form={form} onFinish={handleAddSubmit}>
+          <Form.Item
+            name="mode_transport"
+            label="Mode de transport"
+            rules={[{ required: true, message: 'Ce champ est requis' }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="emission_par_km"
+            label="Émission CO2 (kg/km)"
+            rules={[
+              { required: true, message: 'Ce champ est requis' },
+              { pattern: /^\d*\.?\d+$/, message: 'Doit être un nombre' }
+            ]}
+          >
+            <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
+      
+      {/* Modal pour modifier */}
+      <Modal
+        title="Modifier un mode de transport"
+        open={isEditModalVisible}
+        onCancel={() => setIsEditModalVisible(false)}
+        onOk={() => editForm.submit()}
+      >
+        <Form form={editForm} onFinish={handleEditSubmit}>
+          <Form.Item
+            name="mode_transport"
+            label="Mode de transport"
+          >
+            <Input disabled />
+          </Form.Item>
+          <Form.Item
+            name="emission_par_km"
+            label="Émission CO2 (kg/km)"
+            rules={[
+              { required: true, message: 'Ce champ est requis' },
+              { pattern: /^\d*\.?\d+$/, message: 'Doit être un nombre' }
+            ]}
+          >
+            <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
-}
+};
+
+export default EmissionsAdmin;
