@@ -1,32 +1,16 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import database
 import os
-from routes import transport, distance, trajet
+from routes import transport, distance, trajet, admin, emission
 
 
-app = FastAPI(title="API CO2 Calculator",
-              openapi_url="/openapi.json",
-              docs_url="/docs",
-              redoc_url="/redoc",
-              root_path="/")
-
-origins = ['http://localhost',
-           'http://localhost:8080',
-           'http://192.168.75.41',
-           'http://192.168.75.41/dev/']
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = FastAPI(title="API CO2 Calculator")
 
 app.include_router(transport.router)
 app.include_router(distance.router)
 app.include_router(trajet.router)
+app.include_router(emission.router)
+app.include_router(admin.router)
 
 @app.get("/")
 def home():
