@@ -61,7 +61,7 @@ def get_lat_long(address):
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0)'
     }
     url = f"https://nominatim.openstreetmap.org/search?q={address}&format=jsonv2"
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, timeout=5000)
     if response and response.status_code == 200:
         data = response.json()
         if data:
