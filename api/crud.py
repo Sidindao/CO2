@@ -28,7 +28,7 @@ async def calculer_emission_co2(db: AsyncSession, mode_transport: str, distance_
     if emission is None:
         return None
 
-    total_emission = emission.emission_par_km * distance_km
+    total_emission = emission.emission_par_km * distance_km if distance_km>0 else 0
     equivalent_en_arbre = int(co2_to_trees(total_emission))
     return {
         "mode_transport": emission.mode_transport,  # on renvoie le vrai nom
@@ -42,6 +42,9 @@ async def calculer_emission_trajet(mode_transport: str,
                             lat1: float, lon1: float,
                             lat2: float, lon2: float,
                             db: AsyncSession):
+    if not (lat1 and lat2 and lon1 and lon2):
+        return None
+
     """ if mode_transport.split(' ')[0].lower() == "car":
         distance_km = fetch_distance_osrm("car", lat1, lon1, lat2, lon2)["car"]
     else: """

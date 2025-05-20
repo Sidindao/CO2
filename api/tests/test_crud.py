@@ -72,3 +72,13 @@ async def test_calculer_emission_trajet(test_db):
 async def test_calculer_emission_trajet_is_none(test_db):
     result = await calculer_emission_trajet("Car", 0.00, 0.00, 40.41, -3.70, test_db)
     assert result is None """
+
+@pytest.mark.asyncio
+async def test_calculer_emission_trajet_with_null_coordinates(test_db):
+    result = await calculer_emission_trajet(
+        mode_transport="Bus",
+        lat1=None, lon1=4.85,
+        lat2=45.75, lon2=-3.70,
+        db=test_db
+    )
+    assert result is None
